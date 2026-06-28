@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CardioPrédict — Analyse du Risque Cardiaque</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <div class="bg-canvas">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+    <div class="grid-lines"></div>
+  </div>
+
+  <nav class="navbar">
+    <div class="nav-inner">
+      <div class="nav-brand">
+        <div class="brand-pulse">
+          <svg viewBox="0 0 60 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polyline class="ecg-line" points="0,15 8,15 12,5 16,25 20,10 24,18 28,15 60,15"
+              stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <span class="brand-name">CardioPrédict</span>
+          <span class="brand-tag">Analyse IA du risque cardiaque</span>
+        </div>
+      </div>
+      <div class="nav-chips">
+        <span class="chip chip--model"><i class="fa-solid fa-microchip"></i> XGBoost</span>
+        <span class="chip chip--status"><i class="fa-solid fa-circle"></i> En ligne</span>
+      </div>
+    </div>
+  </nav>
+
+  <div class="page-layout">
+
+    <!-- ══════════════════════════════════════════
+         FORMULAIRE GAUCHE
+    ══════════════════════════════════════════ -->
+    <aside class="form-panel">
+
+      <div class="form-progress">
+        <div class="progress-step active"><span class="step-dot"></span><span class="step-label">Identité</span></div>
+        <div class="progress-connector"></div>
+        <div class="progress-step active"><span class="step-dot"></span><span class="step-label">Cardio</span></div>
+        <div class="progress-connector"></div>
+        <div class="progress-step active"><span class="step-dot"></span><span class="step-label">Mode de vie</span></div>
+        <div class="progress-connector"></div>
+        <div class="progress-step active"><span class="step-dot"></span><span class="step-label">Antécédents</span></div>
+      </div>
+
+      <form id="patientForm" action="javascript:void(0)" onsubmit="analyserPatient()">
+
+        <!-- SECTION 01 -->
+        <div class="form-section">
+          <div class="section-eyebrow">
+            <span class="eyebrow-num">01</span>
+            <span class="eyebrow-line"></span>
+            <span class="eyebrow-text">IDENTITÉ DU PATIENT</span>
+          </div>
+          <div class="field-row">
+            <div class="field-block full-width">
+              <div class="field-header">
+                <label class="field-lbl">Âge</label>
+                <div class="field-badge" id="age-val">50 <small>ans</small></div>
+              </div>
+              <div class="range-wrap">
+                <input type="range" class="range-input" id="age" min="20" max="90" value="50" step="1"
+                  oninput="majVal('age',this.value,'ans'); colorRange(this); analyserEnTempsReel()">
+                <div class="range-marks"><span>20</span><span>55</span><span>90</span></div>
+              </div>
+              <div class="risk-stripe">
+                <div class="stripe-seg green"></div>
+                <div class="stripe-seg yellow"></div>
+                <div class="stripe-seg red"></div>
+              </div>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field-block full-width">
+              <label class="field-lbl">Sexe biologique</label>
+              <div class="sex-toggle">
+                <button type="button" class="sex-btn active" data-field="sex" data-value="1" onclick="selToggle(this,'sex',1)">
+                  <i class="fa-solid fa-mars"></i><span>Homme</span>
+                </button>
+                <button type="button" class="sex-btn" data-field="sex" data-value="0" onclick="selToggle(this,'sex',0)">
+                  <i class="fa-solid fa-venus"></i><span>Femme</span>
+                </button>
+              </div>
+              <input type="hidden" id="sex" name="sex" value="1">
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 02 -->
+        <div class="form-section">
+          <div class="section-eyebrow">
+            <span class="eyebrow-num">02</span>
+            <span class="eyebrow-line"></span>
+            <span class="eyebrow-text">PARAMÈTRES CARDIOVASCULAIRES</span>
+          </div>
+          <div class="field-row two-col">
+
+            <div class="field-block">
+              <div class="field-header">
+                <label class="field-lbl">Cholestérol</label>
+                <div class="field-badge" id="cholesterol-val">200 <small>mg/dL</small></div>
+              </div>
+              <div class="range-wrap">
+                <input type="range" class="range-input" id="cholesterol" min="100" max="600" value="200" step="5"
+                  oninput="majVal('cholesterol',this.value,'mg/dL'); colorRange(this); analyserEnTempsReel()">
+                <div class="range-marks"><span>100</span><span>350</span><span>600</span></div>
+              </div>
+            </div>
+
+            <div class="field-block">
+              <div class="field-header">
+                <label class="field-lbl">Triglycérides</label>
+                <div class="field-badge" id="triglycerides-val">150 <small>mg/dL</small></div>
+              </div>
+              <div class="range-wrap">
+                <input type="range" class="range-input" id="triglycerides" min="50" max="800" value="150" step="10"
+                  oninput="majVal('triglycerides',this.value,'mg/dL'); colorRange(this); analyserEnTempsReel()">
+                <div class="range-marks"><span>50</span><span>425</span><span>800</span></div>
+              </div>
+            </div>
+
+            <div class="field-block">
+              <div class="field-header">
+                <label class="field-lbl">Pression systolique</label>
+                <div class="field-badge" id="systolique-val">120 <small>mmHg</small></div>
+              </div>
+              <div class="range-wrap">
+                <input type="range" class="range-input" id="systolique" min="80" max="220" value="120" step="2"
+                  oninput="majVal('systolique',this.value,'mmHg'); colorRange(this); analyserEnTempsReel()">
+                <div class="range-marks"><span>80</span><span>150</span><span>220</span></div>
+              </div>
+            </div>
+
+            <div class="field-block">
+              <div class="field-header">
+                <label class="field-lbl">Pression diastolique</label>
+                <div class="field-badge" id="diastolique-val">80 <small>mmHg</small></div>
+              </div>
+              <div class="range-wrap">
+                <input type="range" class="range-input" id="diastolique" min="40" max="140" value="80" step="2"
+                  oninput="majVal('diastolique',this.value,'mmHg'); colorRange(this); analyserEnTempsReel()">
+                <div class="range-marks"><span>40</span><span>90</span><span>140</span></div>
+              </div>
+            </div>
+
+            <div class="field-block">
+              <div class="field-header">
+                <label class="field-lbl">Fréquence cardiaque max</label>
+                <div class="field-badge" id="heart_rate-val">150 <small>bpm</small></div>
+              </div>
+              <div class="range-wrap">
+                <input type="range" class="range-input" id="heart_rate" min="60" max="220" value="150" step="1"
+                  oninput="majVal('heart_rate',this.value,'bpm'); colorRange(this); analyserEnTempsReel()">
+                <div class="range-marks"><span>60</span><span>140</span><span>220</span></div>
+              </div>
+            </div>
+
+            <div class="field-block">
+              <div class="field-header">
+                <label class="field-lbl">IMC</label>
+                <div class="field-badge" id="bmi-val">25.0 <small>kg/m²</small></div>
+              </div>
+              <div class="range-wrap">
+                <input type="range" class="range-input" id="bmi" min="15" max="50" value="25" step="0.5"
+                  oninput="majVal('bmi',parseFloat(this.value).toFixed(1),'kg/m²'); colorRange(this); analyserEnTempsReel()">
+                <div class="range-marks"><span>15</span><span>32</span><span>50</span></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- SECTION 03 -->
+        <div class="form-section">
+          <div class="section-eyebrow">
+            <span class="eyebrow-num">03</span>
+            <span class="eyebrow-line"></span>
+            <span class="eyebrow-text">MODE DE VIE</span>
+          </div>
+          <div class="field-row two-col">
+
+            <div class="field-block">
+              <div class="field-header">
+                <label class="field-lbl">Exercice physique</label>
+                <div class="field-badge" id="exercise_hours-val">3.0 <small>h/sem</small></div>
+              </div>
+              <div class="range-wrap">
+                <input type="range" class="range-input" id="exercise_hours" min="0" max="30" value="3" step="0.5"
+                  oninput="majVal('exercise_hours',parseFloat(this.value).toFixed(1),'h/sem'); colorRange(this); analyserEnTempsReel()">
+                <div class="range-marks"><span>0</span><span>15</span><span>30</span></div>
+              </div>
+            </div>
+
+            <div class="field-block">
+              <div class="field-header">
+                <label class="field-lbl">Activité physique</label>
+                <div class="field-badge" id="physical_activity-val">3 <small>j/sem</small></div>
+              </div>
+              <div class="range-wrap">
+                <input type="range" class="range-input" id="physical_activity" min="0" max="7" value="3" step="1"
+                  oninput="majVal('physical_activity',this.value,'j/sem'); colorRange(this); analyserEnTempsReel()">
+                <div class="range-marks"><span>0</span><span>3</span><span>7</span></div>
+              </div>
+            </div>
+
+            <div class="field-block">
+              <div class="field-header">
+                <label class="field-lbl">Sédentarité</label>
+                <div class="field-badge" id="sedentary_hours-val">6.0 <small>h/jour</small></div>
+              </div>
+              <div class="range-wrap">
+                <input type="range" class="range-input" id="sedentary_hours" min="0" max="24" value="6" step="0.5"
+                  oninput="majVal('sedentary_hours',parseFloat(this.value).toFixed(1),'h/j'); colorRange(this); analyserEnTempsReel()">
+                <div class="range-marks"><span>0</span><span>12</span><span>24</span></div>
+              </div>
+            </div>
+
+            <div class="field-block">
+              <div class="field-header">
+                <label class="field-lbl">Sommeil</label>
+                <div class="field-badge" id="sleep_hours-val">7.0 <small>h/nuit</small></div>
+              </div>
+              <div class="range-wrap">
+                <input type="range" class="range-input" id="sleep_hours" min="3" max="12" value="7" step="0.5"
+                  oninput="majVal('sleep_hours',parseFloat(this.value).toFixed(1),'h/n'); colorRange(this); analyserEnTempsReel()">
+                <div class="range-marks"><span>3</span><span>7-8</span><span>12</span></div>
+              </div>
+            </div>
+
+            <div class="field-block">
+              <div class="field-header">
+                <label class="field-lbl">Niveau de stress</label>
+                <div class="field-badge" id="stress_level-val">5 <small>/10</small></div>
+              </div>
+              <div class="range-wrap">
+                <input type="range" class="range-input" id="stress_level" min="1" max="10" value="5" step="1"
+                  oninput="majVal('stress_level',this.value,'/10'); colorRange(this); majStress(this.value); analyserEnTempsReel()">
+                <div class="range-marks"><span>Calme</span><span>Modéré</span><span>Extrême</span></div>
+              </div>
+              <div class="stress-emoji" id="stressEmoji">😐</div>
+            </div>
+
+            <div class="field-block">
+              <label class="field-lbl">Alimentation</label>
+              <div class="diet-group">
+                <button type="button" class="diet-btn active" data-field="diet" data-value="0" onclick="selToggle(this,'diet',0)">
+                  <i class="fa-solid fa-leaf"></i><span>Saine</span>
+                </button>
+                <button type="button" class="diet-btn" data-field="diet" data-value="1" onclick="selToggle(this,'diet',1)">
+                  <i class="fa-solid fa-utensils"></i><span>Moyenne</span>
+                </button>
+                <button type="button" class="diet-btn" data-field="diet" data-value="2" onclick="selToggle(this,'diet',2)">
+                  <i class="fa-solid fa-burger"></i><span>Malsaine</span>
+                </button>
+              </div>
+              <input type="hidden" id="diet" name="diet" value="0">
+            </div>
+
+          </div>
+        </div>
+
+        <!-- SECTION 04 -->
+        <div class="form-section">
+          <div class="section-eyebrow">
+            <span class="eyebrow-num">04</span>
+            <span class="eyebrow-line"></span>
+            <span class="eyebrow-text">ANTÉCÉDENTS MÉDICAUX</span>
+          </div>
+          <div class="antecedents-grid">
+
+            <label class="ant-card" for="diabetes">
+              <input type="checkbox" id="diabetes" name="diabetes" value="1" onchange="analyserEnTempsReel()">
+              <div class="ant-icon-wrap"><i class="fa-solid fa-droplet"></i></div>
+              <span class="ant-label">Diabète</span>
+              <div class="ant-check"><i class="fa-solid fa-check"></i></div>
+            </label>
+
+            <label class="ant-card" for="family_history">
+              <input type="checkbox" id="family_history" name="family_history" value="1" onchange="analyserEnTempsReel()">
+              <div class="ant-icon-wrap"><i class="fa-solid fa-dna"></i></div>
+              <span class="ant-label">Antécédents familiaux</span>
+              <div class="ant-check"><i class="fa-solid fa-check"></i></div>
+            </label>
+
+            <label class="ant-card" for="smoking">
+              <input type="checkbox" id="smoking" name="smoking" value="1" onchange="analyserEnTempsReel()">
+              <div class="ant-icon-wrap"><i class="fa-solid fa-smoking"></i></div>
+              <span class="ant-label">Tabagisme</span>
+              <div class="ant-check"><i class="fa-solid fa-check"></i></div>
+            </label>
+
+            <label class="ant-card" for="obesity">
+              <input type="checkbox" id="obesity" name="obesity" value="1" onchange="analyserEnTempsReel()">
+              <div class="ant-icon-wrap"><i class="fa-solid fa-weight-scale"></i></div>
+              <span class="ant-label">Obésité</span>
+              <div class="ant-check"><i class="fa-solid fa-check"></i></div>
+            </label>
+
+            <label class="ant-card" for="alcohol">
+              <input type="checkbox" id="alcohol" name="alcohol" value="1" onchange="analyserEnTempsReel()">
+              <div class="ant-icon-wrap"><i class="fa-solid fa-wine-glass"></i></div>
+              <span class="ant-label">Alcool</span>
+              <div class="ant-check"><i class="fa-solid fa-check"></i></div>
+            </label>
+
+            <label class="ant-card" for="prev_heart">
+              <input type="checkbox" id="prev_heart" name="prev_heart" value="1" onchange="analyserEnTempsReel()">
+              <div class="ant-icon-wrap"><i class="fa-solid fa-heart-circle-exclamation"></i></div>
+              <span class="ant-label">Problèmes cardiaques</span>
+              <div class="ant-check"><i class="fa-solid fa-check"></i></div>
+            </label>
+
+            <label class="ant-card" for="medication">
+              <input type="checkbox" id="medication" name="medication" value="1" onchange="analyserEnTempsReel()">
+              <div class="ant-icon-wrap"><i class="fa-solid fa-pills"></i></div>
+              <span class="ant-label">Sous médication</span>
+              <div class="ant-check"><i class="fa-solid fa-check"></i></div>
+            </label>
+
+          </div>
+        </div>
+
+        <button type="submit" class="btn-main" id="btnAnalyse">
+          <span class="btn-inner">
+            <span class="btn-text"><i class="fa-solid fa-brain"></i> Lancer l'analyse IA</span>
+            <span class="btn-loading" style="display:none"><i class="fa-solid fa-circle-notch fa-spin"></i> Analyse...</span>
+          </span>
+          <span class="btn-shine"></span>
+        </button>
+
+      </form>
+    </aside>
+
+    <!-- ══════════════════════════════════════════
+         RÉSULTAT DROITE
+    ══════════════════════════════════════════ -->
+    <main class="result-panel">
+
+      <!-- Idle -->
+      <div class="result-idle" id="resultIdle">
+        <div class="idle-heart">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <path class="heart-path" d="M50 85 C50 85 15 60 15 35 C15 22 25 12 37 12 C43 12 49 16 50 20 C51 16 57 12 63 12 C75 12 85 22 85 35 C85 60 50 85 50 85Z"/>
+          </svg>
+        </div>
+        <h3>Prêt pour l'analyse</h3>
+        <p>Renseignez le profil clinique du patient puis cliquez sur <strong>Lancer l'analyse IA</strong>.</p>
+        <div class="idle-stats">
+          <div class="idle-stat"><span class="is-num">8 763</span><span class="is-label">patients d'entraînement</span></div>
+          <div class="idle-stat"><span class="is-num">22</span><span class="is-label">variables analysées</span></div>
+          <div class="idle-stat"><span class="is-num">XGBoost</span><span class="is-label">algorithme IA</span></div>
+        </div>
+      </div>
+
+      <!-- Résultat -->
+      <div class="result-content" id="resultContent" style="display:none">
+
+        <!-- Jauge circulaire -->
+        <div class="gauge-card" id="gaugeCard">
+          <div class="gauge-wrap">
+            <svg class="gauge-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+              <circle class="gauge-track" cx="100" cy="100" r="80" fill="none" stroke-width="14"/>
+              <circle class="gauge-arc" id="gaugeArc" cx="100" cy="100" r="80" fill="none" stroke-width="14"
+                stroke-dasharray="502" stroke-dashoffset="502"
+                transform="rotate(-90 100 100)" stroke-linecap="round"/>
+              <text id="gaugeIcon" x="100" y="92"  text-anchor="middle" dominant-baseline="middle" font-size="34">❤️</text>
+              <text id="gaugePct"  x="100" y="128" text-anchor="middle" dominant-baseline="middle"
+                font-family="Syne, sans-serif" font-size="26" font-weight="700" fill="#0F172A">—%</text>
+            </svg>
+          </div>
+          <div class="gauge-info">
+            <div class="gauge-level-label">NIVEAU DE RISQUE</div>
+            <div class="gauge-level" id="gaugeLevel">—</div>
+            <p class="gauge-interp" id="gaugeInterp"></p>
+          </div>
+        </div>
+
+        <!-- Barre segmentée corrigée -->
+        <div class="segbar-card">
+          <div class="segbar-title">Échelle de risque cardiovasculaire</div>
+          <div class="segbar-pct-labels">
+            <span>25%</span><span>50%</span><span>75%</span>
+          </div>
+          <div class="segbar-track">
+            <div class="segbar-fill" id="segbarFill" style="width:0%"></div>
+          </div>
+          <div class="segbar-ticks">
+            <span></span><span></span><span></span>
+          </div>
+          <div class="segbar-zones">
+            <span class="zone-lbl z-low"  id="zone-low" >Faible</span>
+            <span class="zone-lbl z-mod"  id="zone-mod" >Modéré</span>
+            <span class="zone-lbl z-high" id="zone-high">Élevé</span>
+            <span class="zone-lbl z-crit" id="zone-crit">Critique</span>
+          </div>
+        </div>
+
+        <!-- Facteurs + Recommandations -->
+        <div class="cards-row">
+          <div class="info-card">
+            <div class="card-head">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+              <span>Facteurs détectés</span>
+            </div>
+            <div class="card-body" id="factorsList"></div>
+          </div>
+          <div class="info-card">
+            <div class="card-head card-head--blue">
+              <i class="fa-solid fa-lightbulb"></i>
+              <span>Recommandations</span>
+            </div>
+            <div class="card-body" id="recoList"></div>
+          </div>
+        </div>
+
+        <!-- Boutons export -->
+        <div class="export-bar">
+          <button class="export-btn" onclick="exporterPDF()">
+            <i class="fa-solid fa-file-pdf"></i> Exporter PDF
+          </button>
+          <button class="export-btn export-btn--csv" onclick="exporterCSV()">
+            <i class="fa-solid fa-file-csv"></i> Exporter CSV
+          </button>
+          <button class="export-btn export-btn--copy" onclick="copierResultat()">
+            <i class="fa-solid fa-copy"></i> Copier le résultat
+          </button>
+          <button class="export-btn export-btn--reset" onclick="reinitialiser()">
+            <i class="fa-solid fa-rotate-left"></i> Réinitialiser
+          </button>
+        </div>
+
+        <div class="result-meta">
+          <i class="fa-solid fa-clock"></i>
+          Analyse effectuée le <span id="resultDate">—</span>
+        </div>
+
+        <div class="disclaimer">
+          <i class="fa-solid fa-circle-info"></i>
+          Outil d'aide à la décision — ne remplace pas un diagnostic médical qualifié.
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let derniereAnalyse = null;
+    let delai = null;
+
+    function majVal(id, val, unite) {
+      const el = document.getElementById(id + '-val');
+      if (el) el.innerHTML = `${val} <small>${unite}</small>`;
+    }
+
+    function colorRange(input) {
+      const pct = (input.value - input.min) / (input.max - input.min) * 100;
+      const c   = pct < 40 ? '#10b981' : pct < 70 ? '#f59e0b' : '#ef4444';
+      input.style.setProperty('--thumb-color', c);
+      input.style.background = `linear-gradient(to right, ${c} ${pct}%, #e5e7eb ${pct}%)`;
+    }
+
+    function majStress(val) {
+      const emojis = ['','😌','😊','🙂','😐','😐','😟','😟','😰','😰','😱'];
+      document.getElementById('stressEmoji').textContent = emojis[Math.min(val, 10)];
+    }
+
+    function selToggle(btn, champ, val) {
+      document.querySelectorAll(`[data-field="${champ}"]`).forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(champ).value = val;
+      analyserEnTempsReel();
+    }
+
+    document.querySelectorAll('.range-input').forEach(r => colorRange(r));
+
+    // ── Debounce avec mise à jour immédiate des facteurs ─────
+    // Les facteurs s'affichent instantanément au clic sur une case
+    // La requête Flask est envoyée 500ms après (mise à jour du score)
+    function analyserEnTempsReel() {
+      if (derniereAnalyse) genFacteurs();
+      clearTimeout(delai);
+      delai = setTimeout(analyserPatient, 500);
+    }
+
+    function collecterDonnees() {
+      return {
+        'Age'                            : parseFloat(document.getElementById('age').value),
+        'Sex'                            : parseInt(document.getElementById('sex').value),
+        'Cholesterol'                    : parseFloat(document.getElementById('cholesterol').value),
+        'Heart Rate'                     : parseFloat(document.getElementById('heart_rate').value),
+        'Diabetes'                       : document.getElementById('diabetes').checked ? 1 : 0,
+        'Family History'                 : document.getElementById('family_history').checked ? 1 : 0,
+        'Smoking'                        : document.getElementById('smoking').checked ? 1 : 0,
+        'Obesity'                        : document.getElementById('obesity').checked ? 1 : 0,
+        'Alcohol Consumption'            : document.getElementById('alcohol').checked ? 1 : 0,
+        'Exercise Hours Per Week'        : parseFloat(document.getElementById('exercise_hours').value),
+        'Diet'                           : parseInt(document.getElementById('diet').value),
+        'Previous Heart Problems'        : document.getElementById('prev_heart').checked ? 1 : 0,
+        'Medication Use'                 : document.getElementById('medication').checked ? 1 : 0,
+        'Stress Level'                   : parseFloat(document.getElementById('stress_level').value),
+        'Sedentary Hours Per Day'        : parseFloat(document.getElementById('sedentary_hours').value),
+        'BMI'                            : parseFloat(document.getElementById('bmi').value),
+        'Triglycerides'                  : parseFloat(document.getElementById('triglycerides').value),
+        'Physical Activity Days Per Week': parseFloat(document.getElementById('physical_activity').value),
+        'Sleep Hours Per Day'            : parseFloat(document.getElementById('sleep_hours').value),
+        'Systolique'                     : parseFloat(document.getElementById('systolique').value),
+        'Diastolique'                    : parseFloat(document.getElementById('diastolique').value),
+      };
+    }
+
+    async function analyserPatient() {
+      const btn   = document.getElementById('btnAnalyse');
+      const bText = btn.querySelector('.btn-text');
+      const bLoad = btn.querySelector('.btn-loading');
+      bText.style.display = 'none';
+      bLoad.style.display = 'inline';
+      btn.disabled = true;
+
+      try {
+        const r = await fetch('/predict', {
+          method : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body   : JSON.stringify(collecterDonnees())
+        });
+        if (!r.ok) throw new Error('Erreur serveur');
+        const data = await r.json();
+        derniereAnalyse = { ...data, donnees: collecterDonnees(), date: new Date() };
+        afficherResultat(data.probabilite, data.risque);
+      } catch(e) {
+        afficherErreur();
+      } finally {
+        bText.style.display = 'inline';
+        bLoad.style.display = 'none';
+        btn.disabled = false;
+      }
+    }
+
+    function afficherResultat(prob, risque) {
+      const pct = Math.round(prob * 100);
+      let niveau, couleur, icone, interp;
+
+      if      (pct < 25) { niveau='Faible';   couleur='#10b981'; icone='💚'; interp='Profil à faible risque. Continuez vos bonnes habitudes et assurez un suivi annuel.'; }
+      else if (pct < 50) { niveau='Modéré';   couleur='#f59e0b'; icone='💛'; interp='Plusieurs facteurs de risque présents. Une consultation médicale préventive est conseillée.'; }
+      else if (pct < 75) { niveau='Élevé';    couleur='#ef4444'; icone='🔴'; interp='Risque cardiovasculaire significatif. Une évaluation médicale rapide est recommandée.'; }
+      else               { niveau='Critique'; couleur='#991b1b'; icone='🚨'; interp='Risque très élevé. Consultation médicale urgente impérative.'; }
+
+      document.getElementById('resultIdle').style.display    = 'none';
+      document.getElementById('resultContent').style.display = 'block';
+
+      const circ   = 502;
+      const offset = circ - (pct / 100) * circ;
+      const arc    = document.getElementById('gaugeArc');
+      arc.style.stroke           = couleur;
+      arc.style.strokeDashoffset = circ;
+      setTimeout(() => { arc.style.strokeDashoffset = offset; }, 50);
+      document.getElementById('gaugeIcon').textContent = icone;
+      document.getElementById('gaugePct').textContent  = `${pct}%`;
+      document.getElementById('gaugePct').setAttribute('fill', couleur);
+      document.getElementById('gaugeCard').style.borderColor = couleur + '55';
+      document.getElementById('gaugeLevel').textContent  = niveau;
+      document.getElementById('gaugeLevel').style.color  = couleur;
+      document.getElementById('gaugeInterp').textContent = interp;
+
+      const fill = document.getElementById('segbarFill');
+      fill.style.width      = '0%';
+      fill.style.background = `linear-gradient(90deg, #10b981, ${couleur})`;
+      setTimeout(() => { fill.style.width = `${pct}%`; }, 60);
+
+      ['low','mod','high','crit'].forEach(z =>
+        document.getElementById('zone-' + z).classList.remove('active-zone')
+      );
+      const za = pct < 25 ? 'low' : pct < 50 ? 'mod' : pct < 75 ? 'high' : 'crit';
+      document.getElementById('zone-' + za).classList.add('active-zone');
+
+      genFacteurs();
+      genRecos(pct);
+
+      document.getElementById('resultDate').textContent =
+        new Date().toLocaleDateString('fr-FR', {day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit'});
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // genFacteurs() — CORRIGÉ
+    // Les 7 antécédents sont tous vérifiés + seuils cliniques
+    // ═══════════════════════════════════════════════════════════
+    function genFacteurs() {
+      const f = [];
+      const v = collecterDonnees();
+
+      // Seuils cliniques des sliders
+      if (v['Age']           >= 65)  f.push({ic:'fa-calendar',    tx:`Âge ${v['Age']} ans : facteur de risque significatif`,       niv:'alert'});
+      if (v['Cholesterol']   >= 240) f.push({ic:'fa-droplet',     tx:`Cholestérol élevé : ${v['Cholesterol']} mg/dL (seuil 200)`,  niv:'alert'});
+      if (v['Systolique']    >= 140) f.push({ic:'fa-gauge-high',  tx:`Hypertension : ${v['Systolique']} mmHg systolique`,           niv:'alert'});
+      if (v['Diastolique']   >= 90)  f.push({ic:'fa-gauge-high',  tx:`Pression diastolique : ${v['Diastolique']} mmHg`,             niv:'warn'});
+      if (v['Triglycerides'] >= 200) f.push({ic:'fa-vial',        tx:`Triglycérides élevés : ${v['Triglycerides']} mg/dL`,         niv:'alert'});
+      if (v['BMI']           >= 30)  f.push({ic:'fa-weight-scale',tx:`IMC : ${v['BMI']} kg/m² — surpoids ou obésité`,              niv:'warn'});
+      if (v['Stress Level']  >= 7)   f.push({ic:'fa-brain',       tx:`Stress élevé : ${v['Stress Level']}/10`,                     niv:'warn'});
+      if (v['Sedentary Hours Per Day'] >= 8) f.push({ic:'fa-couch',tx:`Sédentarité excessive : ${v['Sedentary Hours Per Day']}h/j`, niv:'warn'});
+      if (v['Sleep Hours Per Day'] < 6)      f.push({ic:'fa-moon', tx:`Sommeil insuffisant : ${v['Sleep Hours Per Day']}h/nuit`,    niv:'warn'});
+      if (v['Diet'] === 2)           f.push({ic:'fa-burger',       tx:'Régime alimentaire malsain',                                 niv:'warn'});
+
+      // Les 7 antécédents médicaux — tous vérifiés
+      if (v['Diabetes'] === 1)
+        f.push({ic:'fa-syringe',                  tx:'Diabète diagnostiqué',                              niv:'alert'});
+      if (v['Family History'] === 1)
+        f.push({ic:'fa-dna',                      tx:'Antécédents familiaux cardiovasculaires',            niv:'warn'});
+      if (v['Smoking'] === 1)
+        f.push({ic:'fa-smoking',                  tx:'Tabagisme actif — risque cardiovasculaire majeur',  niv:'alert'});
+      if (v['Obesity'] === 1)
+        f.push({ic:'fa-weight-scale',             tx:'Obésité diagnostiquée',                              niv:'alert'});
+      if (v['Alcohol Consumption'] === 1)
+        f.push({ic:'fa-wine-glass',               tx:"Consommation d'alcool régulière",                    niv:'warn'});
+      if (v['Previous Heart Problems'] === 1)
+        f.push({ic:'fa-heart-circle-exclamation', tx:'Antécédents de problèmes cardiaques',                niv:'alert'});
+      if (v['Medication Use'] === 1)
+        f.push({ic:'fa-pills',                    tx:'Sous médication cardiovasculaire',                   niv:'warn'});
+
+      const c = document.getElementById('factorsList');
+      if (!f.length) {
+        c.innerHTML = '<div class="factor-ok"><i class="fa-solid fa-circle-check"></i> Aucun facteur de risque majeur détecté</div>';
+        return;
+      }
+      c.innerHTML = f.map(x =>
+        `<div class="factor-item f-${x.niv}">
+           <i class="fa-solid ${x.ic}"></i><span>${x.tx}</span>
+         </div>`
+      ).join('');
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // genRecos() — CORRIGÉ
+    // Recommandations liées aux facteurs cochés + au niveau %
+    // ═══════════════════════════════════════════════════════════
+    function genRecos(pct) {
+      const v = collecterDonnees();
+      const r = [];
+
+      // Universelles
+      r.push({ic:'fa-person-walking', tx:"30 min d'activité physique modérée par jour"});
+      r.push({ic:'fa-apple-whole',    tx:'Alimentation riche en fibres, pauvre en graisses saturées'});
+      r.push({ic:'fa-moon',           tx:'7 à 8 heures de sommeil par nuit'});
+
+      // Liées aux antécédents cochés
+      if (v['Smoking'] === 1)
+        r.push({ic:'fa-smoking-ban',          tx:'Arrêt du tabac : réduction majeure du risque cardiaque'});
+      if (v['Obesity'] === 1 || v['BMI'] >= 30)
+        r.push({ic:'fa-scale-balanced',       tx:'Programme de gestion du poids avec suivi médical'});
+      if (v['Diabetes'] === 1)
+        r.push({ic:'fa-syringe',              tx:'Contrôle glycémique strict et suivi diabétologique'});
+      if (v['Alcohol Consumption'] === 1)
+        r.push({ic:'fa-wine-glass-empty',     tx:"Réduction ou arrêt de la consommation d'alcool"});
+      if (v['Previous Heart Problems'] === 1)
+        r.push({ic:'fa-heart-pulse',          tx:'Suivi cardiologique régulier obligatoire'});
+      if (v['Medication Use'] === 1)
+        r.push({ic:'fa-pills',                tx:'Respect strict du traitement médicamenteux prescrit'});
+      if (v['Family History'] === 1)
+        r.push({ic:'fa-dna',                  tx:'Bilan génétique cardiovasculaire conseillé'});
+
+      // Liées aux seuils des sliders
+      if (v['Cholesterol'] >= 200)
+        r.push({ic:'fa-droplet',              tx:'Bilan lipidique complet recommandé'});
+      if (v['Systolique'] >= 130)
+        r.push({ic:'fa-gauge-high',           tx:'Surveillance régulière de la pression artérielle'});
+      if (v['Stress Level'] >= 6)
+        r.push({ic:'fa-spa',                  tx:'Gestion du stress : méditation, yoga, respiration'});
+      if (v['Sedentary Hours Per Day'] >= 6)
+        r.push({ic:'fa-chair',                tx:'Pauses actives toutes les heures de travail assis'});
+      if (v['Diet'] >= 1)
+        r.push({ic:'fa-utensils',             tx:'Consulter un nutritionniste pour un plan alimentaire'});
+
+      // Liées au niveau de risque global
+      if (pct >= 50)
+        r.push({ic:'fa-user-doctor',          tx:'Consultation cardiologique dans les 3 mois'});
+      if (pct >= 75) {
+        r.push({ic:'fa-ambulance',            tx:'Consultation médicale urgente recommandée'});
+        r.push({ic:'fa-hospital',             tx:'ECG et échographie cardiaque à réaliser'});
+      }
+
+      // Dédoublonner et limiter à 8 recommandations
+      const vues = new Set();
+      const uniques = r.filter(x => {
+        if (vues.has(x.tx)) return false;
+        vues.add(x.tx); return true;
+      }).slice(0, 8);
+
+      document.getElementById('recoList').innerHTML = uniques.map(x =>
+        `<div class="reco-item">
+           <i class="fa-solid ${x.ic}"></i><span>${x.tx}</span>
+         </div>`
+      ).join('');
+    }
+
+    function afficherErreur() {
+      document.getElementById('resultIdle').style.display    = 'none';
+      document.getElementById('resultContent').style.display = 'block';
+      document.getElementById('gaugeCard').innerHTML = `
+        <div style="text-align:center;padding:2rem;color:#ef4444;width:100%">
+          <i class="fa-solid fa-circle-exclamation" style="font-size:2.5rem"></i>
+          <p style="margin-top:1rem;font-size:13px">Impossible de joindre le serveur.<br>Vérifiez que Flask est lancé.</p>
+        </div>`;
+    }
+
+    // ── Export PDF ──────────────────────────────────────────────
+    function exporterPDF() {
+      if (!derniereAnalyse) { toast("Lancez d'abord une analyse."); return; }
+      window.print();
+      toast("Fenêtre d'impression ouverte.");
+    }
+
+    // ── Export CSV ──────────────────────────────────────────────
+    function exporterCSV() {
+      if (!derniereAnalyse) { toast("Lancez d'abord une analyse."); return; }
+      const d   = derniereAnalyse;
+      const dt  = d.date.toISOString();
+      const pct = Math.round(d.probabilite * 100);
+      const niv = pct < 25 ? 'Faible' : pct < 50 ? 'Modéré' : pct < 75 ? 'Élevé' : 'Critique';
+      const entetes = ['Date','Risque','Probabilite(%)','Niveau',...Object.keys(d.donnees)];
+      const valeurs = [dt, d.risque, pct, niv,...Object.values(d.donnees)];
+      const blob = new Blob([entetes.join(',') + '\n' + valeurs.join(',')], {type:'text/csv;charset=utf-8;'});
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = `cardiopredict_${dt.slice(0,10)}.csv`;
+      a.click(); URL.revokeObjectURL(url);
+      toast('Fichier CSV téléchargé.');
+    }
+
+    // ── Copier résultat ─────────────────────────────────────────
+    function copierResultat() {
+      if (!derniereAnalyse) { toast("Lancez d'abord une analyse."); return; }
+      const d   = derniereAnalyse;
+      const pct = Math.round(d.probabilite * 100);
+      const niv = pct < 25 ? 'Faible' : pct < 50 ? 'Modéré' : pct < 75 ? 'Élevé' : 'Critique';
+      const txt = `CardioPrédict — Résultat d'analyse\nDate : ${d.date.toLocaleString('fr-FR')}\nRisque : ${niv} (${pct}%)\n\nDonnées patient :\n`
+        + Object.entries(d.donnees).map(([k,v]) => `  ${k}: ${v}`).join('\n');
+      navigator.clipboard.writeText(txt).then(() => toast('Résultat copié dans le presse-papier.'));
+    }
+
+    // ── Réinitialiser ───────────────────────────────────────────
+    function reinitialiser() {
+      document.getElementById('patientForm').reset();
+      document.getElementById('resultIdle').style.display    = 'flex';
+      document.getElementById('resultContent').style.display = 'none';
+      derniereAnalyse = null;
+      document.querySelectorAll('.range-input').forEach(r => colorRange(r));
+      document.querySelectorAll('[data-field="sex"]')[0].classList.add('active');
+      document.querySelectorAll('[data-field="sex"]')[1].classList.remove('active');
+      document.getElementById('sex').value  = '1';
+      document.getElementById('diet').value = '0';
+      document.querySelectorAll('.diet-btn').forEach((b,i) => b.classList.toggle('active', i === 0));
+      majVal('age','50','ans');              majVal('cholesterol','200','mg/dL');
+      majVal('systolique','120','mmHg');     majVal('diastolique','80','mmHg');
+      majVal('heart_rate','150','bpm');      majVal('bmi','25.0','kg/m²');
+      majVal('triglycerides','150','mg/dL'); majVal('exercise_hours','3.0','h/sem');
+      majVal('physical_activity','3','j/sem');majVal('sedentary_hours','6.0','h/j');
+      majVal('sleep_hours','7.0','h/n');     majVal('stress_level','5','/10');
+      document.getElementById('stressEmoji').textContent = '😐';
+      toast('Formulaire réinitialisé.');
+    }
+
+    // ── Toast ───────────────────────────────────────────────────
+    function toast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+  </script>
+
+</body>
+</html>

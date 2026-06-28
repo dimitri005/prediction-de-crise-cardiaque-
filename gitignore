@@ -1,0 +1,54 @@
+# ═══════════════════════════════════════════════════════════════
+# .gitignore — Fichiers exclus du contrôle de version Git
+#
+# Ces fichiers ne seront PAS poussés sur GitLab/GitHub
+# car ils sont soit trop lourds, soit inutiles en production,
+# soit sensibles (mots de passe, clés API)
+# ═══════════════════════════════════════════════════════════════
+
+# ── Environnement virtuel Python ─────────────────────────────
+# Chaque développeur crée son propre venv localement
+# via : python -m venv venv && pip install -r requirements.txt
+venv/
+env/
+.venv/
+
+# ── Cache Python ─────────────────────────────────────────────
+# Fichiers compilés générés automatiquement par Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# ── Notebooks Jupyter ────────────────────────────────────────
+# Les notebooks sont des outils de développement, pas de production
+# Les checkpoints sont des sauvegardes temporaires inutiles
+*.ipynb
+.ipynb_checkpoints/
+
+# ── Datasets CSV ─────────────────────────────────────────────
+# Trop lourds pour Git (> quelques Mo)
+# À stocker sur Kaggle, Drive ou un bucket S3
+*.csv
+
+# ── Variables d'environnement ────────────────────────────────
+# Contient des informations sensibles : clés API, mots de passe
+# Ne JAMAIS pousser ce fichier sur Git
+.env
+.env.local
+.env.production
+
+# ── Éditeurs et IDEs ─────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── Système d'exploitation ───────────────────────────────────
+.DS_Store       # macOS
+Thumbs.db       # Windows
+desktop.ini     # Windows
+
+# ── Logs ─────────────────────────────────────────────────────
+*.log
+logs/
