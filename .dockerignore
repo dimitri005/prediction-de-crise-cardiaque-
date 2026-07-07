@@ -1,0 +1,53 @@
+# ═══════════════════════════════════════════════════════════════
+# .dockerignore — Fichiers exclus de l'image Docker
+#
+# Fonctionne comme .gitignore mais pour Docker
+# Réduit la taille de l'image et accélère le build
+# ═══════════════════════════════════════════════════════════════
+
+# ── Environnement virtuel Python ─────────────────────────────
+# Le venv local ne doit PAS entrer dans l'image
+# Les dépendances sont installées via pip dans le Dockerfile
+venv/
+env/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# ── Notebooks Jupyter ────────────────────────────────────────
+# Outils de développement — inutiles en production
+*.ipynb
+.ipynb_checkpoints/
+
+# ── Datasets CSV ─────────────────────────────────────────────
+# Trop lourds et inutiles — le modèle .pkl suffit
+*.csv
+
+# ── Git ───────────────────────────────────────────────────────
+.git/
+.gitignore
+
+# ── Variables d'environnement ────────────────────────────────
+.env
+.env.*
+
+# ── Documentation et fichiers de dev ─────────────────────────
+*.md
+*.docx
+*.pdf
+docs/
+
+# ── Éditeurs ─────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+
+# ── Système ──────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Logs ─────────────────────────────────────────────────────
+*.log
+logs/
